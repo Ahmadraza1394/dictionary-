@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dictionary App</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #f0f0f0;
+        margin: 0;
+        padding: 0;
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      #dictionary {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 8px;
+        background-color: #fff;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        margin: 20px auto;
+      }
+
+      .word {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .word:last-child {
+        border-bottom: none;
+      }
+
+      .word span {
+        font-weight: bold;
+        color: #007bff;
+      }
+
+      .word p {
+        margin: 0;
+        color: #555;
+      }
+
+      .delete-icon {
+        cursor: pointer;
+        color: red;
+        font-size: 20px;
+        transition: color 0.3s ease;
+      }
+
+      .delete-icon:hover {
+        color: #e60000;
+      }
+
+      form {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      input[type="text"] {
+        width: calc(100% - 22px);
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      button {
+        width: 100%;
+        padding: 10px;
+        background-color: #28a745;
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #218838;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Dictionary</h1>
+
+    <div id="dictionary"></div>
+
+    <h1>Add a new word</h1>
+    <form id="addWordForm">
+      <input type="text" id="newWord" placeholder="Word" required />
+      <input type="text" id="newMeaning" placeholder="Meaning" required />
+      <button type="submit">Add Word</button>
+    </form>
+
+    <script>
+      const dictionaryDiv = document.getElementById("dictionary");
+
+      // Function to fetch and display the dictionary data
+      function loadDictionary() {
+        fetch("/dictionary")
+          .then((response) => response.json())
+          .then((data) => {
+            dictionaryDiv.innerHTML = "";
+            data.forEach((entry) => {
+              const div = document.createElement("div");
+              div.className = "word";
+              div.innerHTML = `
+                <div>
+                  <span>${entry.word}</span>: ${entry.meaning}
+                </div>
+                <span class="delete-icon" onclick="deleteWord('${entry.word}')">🗑️</span>
+              `;
+              dictionaryDiv.appendChild(div);
+            });
+          });
+      }
+
+      // Handle adding a new word
+      document
+        .getElementById("addWordForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const word = document.getElementById("newWord").value;
+          const meaning = document.getElementById("newMeaning").value;
+
+          fetch("/dictionary", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ word, meaning }),
+          })
+            .then((response) => response.json())
+            .then(() => {
+              loadDictionary();
+              document.getElementById("newWord").value = "";
+              document.getElementById("newMeaning").value = "";
+            });
+        });
+
+      // Function to delete a word
+      function deleteWord(word) {
+        fetch(`/dictionary/${word}`, {
+          method: "DELETE",
+        })
+          .then((response) => response.json())
+          .then(() => {
+            loadDictionary();
+          });
+      }
+
+      // Load dictionary on page load
+      loadDictionary();
+    </script>
+  </body>
+</html>
